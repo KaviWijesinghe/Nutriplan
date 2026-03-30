@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NutriPlan — Personalised Diet Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --green: #3B6D11; --green-light: #EAF3DE; --green-mid: #639922; --green-soft: #C0DD97;
+    --amber: #BA7517; --amber-light: #FAEEDA;
+    --teal: #0F6E56; --teal-light: #E1F5EE; --teal-mid: #1D9E75;
+    --coral: #993C1D; --coral-light: #FAECE7;
+    --gold: #c49a0a; --gold-light: #fffbe8;
+    --gray-900: #2C2C2A; --gray-700: #5F5E5A; --gray-400: #888780;
+    --gray-100: #D3D1C7; --gray-50: #F1EFE8; --white: #FAFAF8;
+    --font-serif: 'DM Serif Display', Georgia, serif;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --radius: 14px; --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); background: var(--white); color: var(--gray-900); min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--gray-900); padding: 1.2rem 2rem; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; }
+  .logo-mark { width: 36px; height: 36px; background: var(--green-mid); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .logo-mark svg { width: 20px; height: 20px; }
+  header h1 { font-family: var(--font-serif); font-size: 1.4rem; color: var(--white); letter-spacing: -0.02em; }
+  .tagline { margin-left: auto; font-size: 0.78rem; color: var(--gray-400); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* HERO */
+  .hero { background: linear-gradient(135deg, #1a2f0f 0%, #0d3025 100%); padding: 4rem 2rem 3rem; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 20% 80%, rgba(99,153,34,0.18) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(29,158,117,0.18) 0%, transparent 50%); }
+  .hero h2 { font-family: var(--font-serif); font-size: clamp(2rem,5vw,3.2rem); color: #fff; line-height: 1.15; position: relative; letter-spacing: -0.02em; }
+  .hero h2 em { color: var(--green-soft); font-style: italic; }
+  .hero p { margin-top: 1rem; font-size: 1rem; color: rgba(255,255,255,0.6); position: relative; }
+
+  main { max-width: 940px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+
+  /* FORM CARD */
+  .form-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 2rem; margin-bottom: 2rem; box-shadow: 0 2px 16px rgba(0,0,0,0.05); }
+  .form-card h3 { font-family: var(--font-serif); font-size: 1.4rem; color: var(--gray-900); margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--gray-100); }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--gray-700); }
+  .field input, .field select, .field textarea { font-family: var(--font-sans); font-size: 0.95rem; padding: 0.65rem 0.9rem; border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); background: var(--gray-50); color: var(--gray-900); outline: none; transition: border-color 0.2s, background 0.2s; width: 100%; }
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--green-mid); background: #fff; }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field-wide { grid-column: 1 / -1; }
+
+  /* BMI PREVIEW */
+  .bmi-preview { background: var(--teal-light); border: 1px solid var(--teal-mid); border-radius: var(--radius-sm); padding: 1rem 1.25rem; display: none; align-items: center; gap: 1rem; margin-top: 1.25rem; }
+  .bmi-preview.visible { display: flex; }
+  .bmi-value { font-family: var(--font-serif); font-size: 2.4rem; color: var(--teal); line-height: 1; min-width: 70px; }
+  .bmi-info { flex: 1; }
+  .bmi-category { font-weight: 600; font-size: 0.9rem; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; }
+  .bmi-desc { font-size: 0.82rem; color: var(--gray-700); margin-top: 2px; }
+  .bmi-bar-wrap { margin-top: 8px; }
+  .bmi-bar { height: 6px; background: linear-gradient(to right, #5DCAA5 0%, #97C459 30%, #EF9F27 55%, #E24B4A 80%, #c0392b 100%); border-radius: 99px; position: relative; }
+  .bmi-indicator { width: 12px; height: 12px; background: var(--teal); border: 2px solid #fff; border-radius: 50%; position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.4s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+
+  /* SUBMIT */
+  .submit-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 1rem; margin-top: 1.5rem; background: var(--gray-900); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 1rem; font-weight: 600; letter-spacing: 0.03em; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+  .submit-btn:hover { background: var(--green); }
+  .submit-btn:active { transform: scale(0.99); }
+  .submit-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
+  .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .submit-btn.loading .spinner { display: block; }
+  .submit-btn.loading .btn-text { opacity: 0.7; }
+
+  /* RESULTS */
+  #results { display: none; }
+  #results.visible { display: block; }
+  .results-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-100); }
+  .results-header h2 { font-family: var(--font-serif); font-size: 1.6rem; color: var(--gray-900); }
+  .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .stat-card { background: var(--gray-50); border: 1px solid var(--gray-100); border-radius: var(--radius-sm); padding: 1rem; text-align: center; }
+  .stat-card .s-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); font-weight: 600; margin-bottom: 4px; }
+  .stat-card .s-value { font-family: var(--font-serif); font-size: 1.6rem; color: var(--gray-900); line-height: 1.1; }
+  .stat-card .s-unit { font-size: 0.8rem; color: var(--gray-400); }
+  .section-title { font-family: var(--font-serif); font-size: 1.3rem; color: var(--gray-900); margin-bottom: 1rem; margin-top: 1.75rem; }
+  .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .plan-card { background: #fff; border: 1.5px solid var(--gray-100); border-radius: var(--radius); padding: 1.25rem; transition: border-color 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+  .plan-card:hover { border-color: var(--green-soft); box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+  .plan-card .plan-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 99px; display: inline-block; margin-bottom: 10px; }
+  .plan-card .plan-name { font-family: var(--font-serif); font-size: 1.2rem; color: var(--gray-900); margin-bottom: 6px; }
+  .plan-card .plan-desc { font-size: 0.86rem; color: var(--gray-700); line-height: 1.55; margin-bottom: 12px; }
+  .plan-card .macro-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .macro-chip { font-size: 0.75rem; font-weight: 500; padding: 3px 10px; border-radius: 99px; background: var(--gray-50); color: var(--gray-700); border: 1px solid var(--gray-100); }
+  .plan-card.recommended { border-color: var(--green-mid); }
+  .plan-card.recommended::before { content: '★ Recommended'; position: absolute; top: 12px; right: 0; background: var(--green-mid); color: #fff; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 14px 4px 10px; border-radius: 99px 0 0 99px; }
+  .meal-plan-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); overflow: hidden; margin-bottom: 1.5rem; }
+  .meal-plan-header { background: var(--gray-900); padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+  .meal-plan-header h4 { font-family: var(--font-serif); font-size: 1.1rem; color: #fff; }
+  .calorie-badge { font-size: 0.8rem; color: var(--green-soft); font-weight: 600; }
+  .meal-row { display: flex; align-items: flex-start; gap: 1rem; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--gray-50); }
+  .meal-row:last-child { border-bottom: none; }
+  .meal-time { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); min-width: 60px; padding-top: 2px; }
+  .meal-content { flex: 1; }
+  .meal-name { font-weight: 500; font-size: 0.93rem; color: var(--gray-900); margin-bottom: 2px; }
+  .meal-detail { font-size: 0.8rem; color: var(--gray-700); }
+  .meal-cal { font-size: 0.78rem; color: var(--green-mid); font-weight: 600; white-space: nowrap; }
+  .google-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+  .google-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); padding: 1rem 1.1rem; text-decoration: none; color: inherit; display: block; transition: border-color 0.2s, box-shadow 0.2s; }
+  .google-card:hover { border-color: var(--gray-400); box-shadow: 0 3px 14px rgba(0,0,0,0.07); }
+  .google-card .g-source { font-size: 0.7rem; color: var(--green-mid); font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+  .google-card .g-source::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--green-mid); flex-shrink: 0; }
+  .google-card .g-title { font-family: var(--font-serif); font-size: 1rem; color: var(--gray-900); line-height: 1.35; margin-bottom: 5px; }
+  .google-card .g-snippet { font-size: 0.8rem; color: var(--gray-700); line-height: 1.5; }
+  .placeholder-box { background: var(--amber-light); border: 1px dashed var(--amber); border-radius: var(--radius-sm); padding: 1.2rem; font-size: 0.88rem; color: var(--amber); line-height: 1.5; margin-bottom: 1.5rem; }
+
+  /* ══════════════════════════════════════════
+     PLAN TRACKER
+  ══════════════════════════════════════════ */
+  #planTracker { display: none; }
+  #planTracker.visible { display: block; }
+
+  .tracker-card { background: #fff; border: 1px solid var(--gray-100); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; box-shadow: 0 2px 20px rgba(0,0,0,0.06); }
+
+  .tracker-header { background: linear-gradient(135deg, #1a2f0f 0%, #0d3025 100%); padding: 1.4rem 1.75rem; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .tracker-header-left h3 { font-family: var(--font-serif); font-size: 1.35rem; color: #fff; }
+  .tracker-header-left p { font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .gcal-btn { display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: var(--radius-sm); padding: 0.55rem 1rem; font-family: var(--font-sans); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
+  .gcal-btn:hover { background: rgba(255,255,255,0.22); }
+  .gcal-btn:active { transform: scale(0.97); }
+  .gcal-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* Date range row */
+  .date-range-row { display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; padding: 1.25rem 1.75rem 0; }
+  .date-range-row .field { flex: 1; min-width: 160px; }
+  .start-plan-btn { padding: 0.65rem 1.4rem; background: var(--green-mid); color: #fff; border: none; border-radius: var(--radius-sm); font-family: var(--font-sans); font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; align-self: flex-end; }
+  .start-plan-btn:hover { background: var(--green); }
+  .start-plan-btn:active { transform: scale(0.97); }
+
+  /* Progress bar */
+  .tracker-progress-wrap { padding: 1.25rem 1.75rem 0; display: none; }
+  .progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .progress-label { font-size: 0.8rem; color: var(--gray-700); font-weight: 500; }
+  .progress-pct { font-size: 0.8rem; color: var(--green-mid); font-weight: 700; }
+  .progress-bar-bg { height: 8px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(to right, var(--teal-mid), var(--green-mid)); border-radius: 99px; transition: width 0.5s ease; }
+
+  /* Week tabs */
+  .week-tabs-wrap { padding: 1.25rem 1.75rem 0; display: none; }
+  .week-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .week-tab { flex-shrink: 0; padding: 0.4rem 1rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 1.5px solid var(--gray-100); background: #fff; color: var(--gray-700); transition: all 0.2s; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .week-tab:hover { border-color: var(--green-mid); color: var(--green); }
+  .week-tab.active { background: var(--gray-900); color: #fff; border-color: var(--gray-900); }
+  .week-tab .wtab-star { font-size: 12px; }
+
+  /* Week reward banner */
+  .week-reward { margin: 1.25rem 1.75rem 0; background: var(--gold-light); border: 1.5px solid #e8c84a; border-radius: var(--radius); padding: 1.1rem 1.4rem; display: none; align-items: center; gap: 1rem; }
+  .week-reward.show { display: flex; }
+  .reward-star-big { font-size: 2.6rem; line-height: 1; animation: starPop 0.5s cubic-bezier(.36,1.56,.64,1) forwards; }
+  @keyframes starPop { 0%{transform:scale(0) rotate(-20deg);opacity:0} 100%{transform:scale(1) rotate(0deg);opacity:1} }
+  .reward-text h4 { font-family: var(--font-serif); font-size: 1.1rem; color: #7a5800; margin-bottom: 3px; }
+  .reward-text p { font-size: 0.82rem; color: #9a7020; line-height: 1.45; }
+
+  /* Day grid */
+  .day-grid { padding: 1rem 1.75rem 1.75rem; display: flex; flex-direction: column; gap: 8px; }
+  .day-row { display: flex; align-items: center; gap: 12px; padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1.5px solid var(--gray-100); background: #fff; transition: border-color 0.2s, background 0.2s; }
+  .day-row.is-today { border-color: var(--teal-mid); background: var(--teal-light); }
+  .day-row.is-done { border-color: var(--green-soft); background: var(--green-light); }
+  .day-row.is-future { opacity: 0.5; }
+
+  .check-btn { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; border: 2px solid var(--gray-100); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.18s; font-size: 15px; color: transparent; }
+  .check-btn:hover:not([disabled]) { border-color: var(--green-mid); background: var(--green-light); }
+  .check-btn.done { background: var(--green-mid); border-color: var(--green); color: #fff; }
+  .check-btn[disabled] { cursor: default; }
+
+  .day-info { flex: 1; min-width: 0; }
+  .day-label { font-weight: 600; font-size: 0.88rem; color: var(--gray-900); }
+  .day-datenum { font-size: 0.75rem; color: var(--gray-400); margin-top: 1px; }
+  .day-meals-preview { font-size: 0.77rem; color: var(--gray-700); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .day-pill { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 9px; border-radius: 99px; flex-shrink: 0; }
+  .pill-today { background: var(--teal-light); color: var(--teal); }
+  .pill-done { background: var(--green-light); color: var(--green); }
+
+  /* Stars tally */
+  .stars-tally { display: none; align-items: center; gap: 10px; padding: 0.85rem 1.75rem 1rem; border-top: 1px solid var(--gray-100); }
+  .stars-tally.show { display: flex; }
+  .stars-label { font-size: 0.78rem; color: var(--gray-700); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
+  .stars-display { display: flex; gap: 4px; flex-wrap: wrap; }
+  .star-filled { font-size: 20px; animation: starPop 0.4s cubic-bezier(.36,1.56,.64,1) both; }
+  .star-empty { font-size: 20px; opacity: 0.2; }
+
+  /* Confetti */
+  #confettiCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; display: none; }
+
+  footer { text-align: center; padding: 2rem; font-size: 0.8rem; color: var(--gray-400); border-top: 1px solid var(--gray-100); margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 20 20" fill="none">
+      <path d="M10 3C7 3 4 5.5 4 9c0 2 1 3.5 2.5 4.5V15h7v-1.5C15 12.5 16 11 16 9c0-3.5-3-6-6-6z" fill="white" opacity="0.9"/>
+      <rect x="7" y="15" width="6" height="2" rx="1" fill="white" opacity="0.7"/>
+    </svg>
+  </div>
+  <h1>NutriPlan</h1>
+  <span class="tagline">Personalised Diet Intelligence</span>
+</header>
+
+<section class="hero">
+  <h2>Your body, your<br/><em>perfect diet plan.</em></h2>
+  <p>Enter your details — we'll calculate your BMI and build a tailored plan with a daily completion tracker.</p>
+</section>
+
+<main>
+
+  <!-- INPUT FORM -->
+  <div class="form-card">
+    <h3>Tell us about yourself</h3>
+    <div class="form-grid">
+      <div class="field"><label>Age</label><input type="number" id="age" placeholder="e.g. 28" min="10" max="100"/></div>
+      <div class="field">
+        <label>Gender</label>
+        <select id="gender"><option value="">Select...</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other / Prefer not to say</option></select>
+      </div>
+      <div class="field"><label>Height (cm)</label><input type="number" id="height" placeholder="e.g. 172" min="100" max="250"/></div>
+      <div class="field"><label>Weight (kg)</label><input type="number" id="weight" placeholder="e.g. 70" min="30" max="300"/></div>
+      <div class="field">
+        <label>Activity Level</label>
+        <select id="activity"><option value="">Select...</option><option value="sedentary">Sedentary (desk job, little exercise)</option><option value="light">Lightly active (1–3 days/week)</option><option value="moderate">Moderately active (3–5 days/week)</option><option value="active">Very active (6–7 days/week)</option><option value="athlete">Athlete / Physical job</option></select>
+      </div>
+      <div class="field">
+        <label>Goal</label>
+        <select id="goal"><option value="">Select...</option><option value="lose_weight">Lose weight</option><option value="maintain">Maintain weight</option><option value="gain_muscle">Gain muscle / bulk</option><option value="improve_health">Improve general health</option></select>
+      </div>
+      <div class="field field-wide"><label>Health conditions / dietary restrictions (optional)</label><textarea id="conditions" placeholder="e.g. Diabetic, lactose intolerant, vegetarian, allergic to nuts…"></textarea></div>
+    </div>
+
+    <div class="bmi-preview" id="bmiPreview">
+      <div class="bmi-value" id="bmiNum">—</div>
+      <div class="bmi-info">
+        <div class="bmi-category" id="bmiCat">—</div>
+        <div class="bmi-desc" id="bmiDesc">—</div>
+        <div class="bmi-bar-wrap"><div class="bmi-bar"><div class="bmi-indicator" id="bmiIndicator" style="left:0%"></div></div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.25rem;"><div class="field"><label>n8n Webhook URL</label><input type="url" id="webhookUrl" placeholder="https://your-n8n.app/webhook/diet-planner"/></div></div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">
+      <div class="spinner" id="spinner"></div>
+      <span class="btn-text">Generate My Diet Plan ↗</span>
+    </button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+    <div class="results-header"><h2>Your Personalised Plan</h2></div>
+    <div class="stats-row" id="statsRow"></div>
+    <h3 class="section-title">Recommended Diet Approaches</h3>
+    <div class="plan-grid" id="planGrid"></div>
+    <h3 class="section-title">Sample Daily Meal Plan</h3>
+    <div class="meal-plan-card">
+      <div class="meal-plan-header">
+        <h4>Day 1 — Balanced Start</h4>
+        <span class="calorie-badge" id="calorieBadge">— kcal target</span>
+      </div>
+      <div id="mealRows"></div>
+    </div>
+    <h3 class="section-title">Explore Diet Plans Online</h3>
+    <div class="placeholder-box" id="googleNote"></div>
+    <div class="google-grid" id="googleGrid"></div>
+  </div>
+
+  <!-- ══════════════ PLAN TRACKER ══════════════ -->
+  <div id="planTracker">
+    <h3 class="section-title" style="margin-top:2.5rem;">Daily Plan Tracker</h3>
+
+    <div class="tracker-card">
+
+      <!-- Header -->
+      <div class="tracker-header">
+        <div class="tracker-header-left">
+          <h3>Progress Tracker</h3>
+          <p id="trackerSubtitle">Set your start and end dates below, then click Start Tracker</p>
+        </div>
+        <button class="gcal-btn" onclick="exportToGCal()">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="4" width="18" height="18" rx="2" stroke="white" stroke-width="1.8"/>
+            <path d="M16 2v4M8 2v4M3 10h18" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            <rect x="7.5" y="13.5" width="3.5" height="3.5" rx="0.4" fill="#34A853"/>
+            <rect x="13" y="13.5" width="3.5" height="3.5" rx="0.4" fill="#FBBC04"/>
+          </svg>
+          Add to Google Calendar
+        </button>
+      </div>
+
+      <!-- Date Range -->
+      <div class="date-range-row">
+        <div class="field"><label>Start Date</label><input type="date" id="planStartDate"/></div>
+        <div class="field"><label>End Date</label><input type="date" id="planEndDate"/></div>
+        <button class="start-plan-btn" onclick="initialisePlan()">Start Tracker →</button>
+      </div>
+
+      <!-- Progress -->
+      <div class="tracker-progress-wrap" id="progressWrap">
+        <div class="progress-row">
+          <span class="progress-label" id="progressLabel">0 of 0 days completed</span>
+          <span class="progress-pct" id="progressPct">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- Week Tabs -->
+      <div class="week-tabs-wrap" id="weekTabsWrap">
+        <div class="week-tabs" id="weekTabs"></div>
+      </div>
+
+      <!-- Reward Banner -->
+      <div class="week-reward" id="weekReward">
+        <div class="reward-star-big">⭐</div>
+        <div class="reward-text">
+          <h4 id="rewardTitle">Week Complete!</h4>
+          <p id="rewardDesc">You completed all days this week. You earned a star — amazing consistency!</p>
+        </div>
+      </div>
+
+      <!-- Day Grid -->
+      <div class="day-grid" id="dayGrid"></div>
+
+      <!-- Stars Tally -->
+      <div class="stars-tally" id="starsTally">
+        <span class="stars-label">Stars earned</span>
+        <div class="stars-display" id="starsDisplay"></div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>NutriPlan — Diet plans are for informational purposes only. Consult a registered dietitian for medical advice.</footer>
+
+<script>
+// ═══ STATE ════════════════════════════════════════════════════════
+const S = {
+  meals: [], planName: 'My Diet Plan', goalCals: 2000,
+  done: {},        // { "YYYY-MM-DD": true }
+  start: null, end: null, activeWeek: 0
+};
+
+// ═══ BMI ══════════════════════════════════════════════════════════
+document.getElementById('height').addEventListener('input', updateBMI);
+document.getElementById('weight').addEventListener('input', updateBMI);
+function updateBMI() {
+  const h = parseFloat(document.getElementById('height').value) / 100;
+  const w = parseFloat(document.getElementById('weight').value);
+  const preview = document.getElementById('bmiPreview');
+  if (!h || !w || h <= 0) { preview.classList.remove('visible'); return; }
+  const bmi = w / (h * h);
+  document.getElementById('bmiNum').textContent = bmi.toFixed(1);
+  preview.classList.add('visible');
+  let cat, desc, pct;
+  if (bmi < 18.5)    { cat='Underweight'; desc='BMI below 18.5 — consider a calorie surplus'; pct=Math.max(2,(bmi/18.5)*28); }
+  else if (bmi < 25) { cat='Healthy Weight'; desc='BMI 18.5–24.9 — within healthy range'; pct=28+((bmi-18.5)/6.4)*27; }
+  else if (bmi < 30) { cat='Overweight'; desc='BMI 25–29.9 — moderate weight reduction advised'; pct=55+((bmi-25)/5)*20; }
+  else               { cat='Obese'; desc='BMI 30+ — consult a healthcare professional'; pct=Math.min(97,75+((bmi-30)/10)*22); }
+  document.getElementById('bmiCat').textContent = cat;
+  document.getElementById('bmiDesc').textContent = desc;
+  document.getElementById('bmiIndicator').style.left = pct.toFixed(1)+'%';
+}
+
+// ═══ FORM SUBMIT ══════════════════════════════════════════════════
+async function submitForm() {
+  const ids = ['age','gender','height','weight','activity','goal'];
+  const data = {};
+  for (const id of ids) {
+    const v = document.getElementById(id).value;
+    if (!v) { alert('Please fill in: ' + id); return; }
+    data[id] = v;
+  }
+  data.conditions = document.getElementById('conditions').value;
+  data.bmi = (parseFloat(data.weight) / Math.pow(parseFloat(data.height)/100, 2)).toFixed(1);
+  const webhookUrl = document.getElementById('webhookUrl').value.trim();
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.classList.add('loading');
+  document.getElementById('spinner').style.display = 'block';
+  let res = null;
+  if (webhookUrl) {
+    try { const r = await fetch(webhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}); res = await r.json(); }
+    catch(e) { console.warn('Webhook error:', e.message); }
+  }
+  btn.disabled = false; btn.classList.remove('loading');
+  document.getElementById('spinner').style.display = 'none';
+  renderResults(data, res);
+}
+
+// ═══ RENDER RESULTS ═══════════════════════════════════════════════
+function renderResults(inp, n8n) {
+  document.getElementById('results').classList.add('visible');
+  const bmi = parseFloat(inp.bmi);
+  const tdee = calcTDEE(inp);
+  const gc = adjustCals(tdee, inp.goal);
+  S.goalCals = gc;
+
+  document.getElementById('statsRow').innerHTML = [
+    {l:'BMI',v:bmi.toFixed(1),u:''},{l:'BMI Category',v:bmiCat(bmi),u:''},
+    {l:'Daily Calories',v:gc,u:'kcal'},{l:'TDEE (Maintenance)',v:tdee,u:'kcal'}
+  ].map(s=>`<div class="stat-card"><div class="s-label">${s.l}</div><div class="s-value">${s.v}<span class="s-unit"> ${s.u}</span></div></div>`).join('');
+
+  const plans = n8n?.diet_plans || defaultPlans(inp, bmi);
+  S.planName = plans[0]?.name || 'My Diet Plan';
+  document.getElementById('planGrid').innerHTML = plans.map((p,i)=>`
+    <div class="plan-card ${i===0?'recommended':''}">
+      <span class="plan-tag" style="background:${p.tagBg};color:${p.tagColor}">${p.type}</span>
+      <div class="plan-name">${p.name}</div>
+      <div class="plan-desc">${p.description}</div>
+      <div class="macro-chips">${p.macros.map(m=>`<span class="macro-chip">${m}</span>`).join('')}</div>
+    </div>`).join('');
+
+  document.getElementById('calorieBadge').textContent = `${gc} kcal target`;
+  const meals = n8n?.meal_plan || defaultMeals(gc, inp);
+  S.meals = meals;
+  document.getElementById('mealRows').innerHTML = meals.map(m=>`
+    <div class="meal-row">
+      <div class="meal-time">${m.time}</div>
+      <div class="meal-content"><div class="meal-name">${m.name}</div><div class="meal-detail">${m.detail}</div></div>
+      <div class="meal-cal">${m.cals} kcal</div>
+    </div>`).join('');
+
+  document.getElementById('googleNote').textContent = 'Below are suggested resources — with Google Search in n8n, live results appear here.';
+  const gcards = n8n?.google_results || defaultGoogle(inp);
+  document.getElementById('googleGrid').innerHTML = gcards.map(g=>`
+    <a class="google-card" href="${g.url}" target="_blank" rel="noopener noreferrer">
+      <div class="g-source">${g.source}</div>
+      <div class="g-title">${g.title}</div>
+      <div class="g-snippet">${g.snippet}</div>
+    </a>`).join('');
+
+  // Show tracker
+  const tracker = document.getElementById('planTracker');
+  tracker.classList.add('visible');
+  setTimeout(() => tracker.scrollIntoView({behavior:'smooth',block:'start'}), 300);
+
+  // Pre-fill dates: today → today + 27 days (4 weeks)
+  const today = new Date();
+  const endDate = new Date(today); endDate.setDate(today.getDate() + 27);
+  document.getElementById('planStartDate').value = toStr(today);
+  document.getElementById('planEndDate').value = toStr(endDate);
+}
+
+// ═══ TRACKER INIT ═════════════════════════════════════════════════
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function toStr(d) { return d.toISOString().split('T')[0]; }
+function fromStr(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y,m-1,d); }
+function diffDays(a, b) { return Math.round((b-a)/86400000); }
+
+function initialisePlan() {
+  const s = document.getElementById('planStartDate').value;
+  const e = document.getElementById('planEndDate').value;
+  if (!s || !e) { alert('Please select both start and end dates.'); return; }
+  const start = fromStr(s), end = fromStr(e);
+  if (end <= start) { alert('End date must be after start date.'); return; }
+  S.start = start; S.end = end; S.activeWeek = 0;
+  document.getElementById('trackerSubtitle').textContent =
+    `${start.getDate()} ${MONTHS[start.getMonth()]} – ${end.getDate()} ${MONTHS[end.getMonth()]} ${end.getFullYear()} · ${S.planName}`;
+  document.getElementById('progressWrap').style.display = 'block';
+  document.getElementById('weekTabsWrap').style.display = 'block';
+  document.getElementById('starsTally').classList.add('show');
+  buildTabs();
+  renderWeek(0);
+  updateProgress();
+}
+
+// ═══ WEEK TABS ════════════════════════════════════════════════════
+function totalWeeks() {
+  const days = diffDays(S.start, S.end) + 1;
+  return Math.ceil(days / 7);
+}
+function buildTabs() {
+  const tw = totalWeeks();
+  const wrap = document.getElementById('weekTabs');
+  wrap.innerHTML = '';
+  for (let w = 0; w < tw; w++) {
+    const complete = weekComplete(w);
+    const btn = document.createElement('button');
+    btn.className = 'week-tab' + (w === S.activeWeek ? ' active' : '');
+    btn.innerHTML = `Week ${w+1} <span class="wtab-star">${complete ? '⭐' : ''}</span>`;
+    btn.onclick = () => { S.activeWeek = w; buildTabs(); renderWeek(w); };
+    wrap.appendChild(btn);
+  }
+}
+
+// ═══ WEEK DAYS ════════════════════════════════════════════════════
+function weekDays(w) {
+  const days = [];
+  const base = new Date(S.start); base.setDate(base.getDate() + w * 7);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(base); d.setDate(base.getDate() + i);
+    if (d > S.end) break;
+    days.push(d);
+  }
+  return days;
+}
+function weekComplete(w) {
+  const days = weekDays(w);
+  if (!days.length) return false;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const past = days.filter(d => d <= today);
+  return past.length > 0 && past.every(d => S.done[toStr(d)]);
+}
+
+// ═══ RENDER WEEK ══════════════════════════════════════════════════
+function renderWeek(w) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = weekDays(w);
+  const grid = document.getElementById('dayGrid');
+  grid.innerHTML = '';
+
+  days.forEach(day => {
+    const ds = toStr(day);
+    const isPast = day < today;
+    const isToday = day.getTime() === today.getTime();
+    const isFuture = day > today;
+    const isDone = !!S.done[ds];
+    const dayNum = diffDays(S.start, day) + 1;
+
+    const mealPreview = S.meals.length
+      ? [S.meals[0]?.name, S.meals[2]?.name].filter(Boolean).join(' · ')
+      : 'Balanced meals for the day';
+
+    const row = document.createElement('div');
+    row.className = 'day-row' + (isToday?' is-today':'') + (isDone?' is-done':'') + (isFuture?' is-future':'');
+
+    let pill = '';
+    if (isToday) pill = `<span class="day-pill pill-today">Today</span>`;
+    else if (isDone) pill = `<span class="day-pill pill-done">✓ Done</span>`;
+
+    const disabled = isFuture ? 'disabled' : '';
+    row.innerHTML = `
+      <button class="check-btn ${isDone?'done':''}" ${disabled} onclick="toggleDay('${ds}',${w})" title="${isDone?'Mark incomplete':'Mark as done'}">
+        ${isDone ? '✓' : ''}
+      </button>
+      <div class="day-info">
+        <div class="day-label">${DAYS[day.getDay()]}, ${MONTHS[day.getMonth()]} ${day.getDate()}</div>
+        <div class="day-datenum">Day ${dayNum} of plan</div>
+        <div class="day-meals-preview">${mealPreview}</div>
+      </div>
+      ${pill}
+    `;
+    grid.appendChild(row);
+  });
+
+  // Reward banner
+  const reward = document.getElementById('weekReward');
+  if (weekComplete(w)) {
+    document.getElementById('rewardTitle').textContent = `Week ${w+1} Complete — You earned a star! ⭐`;
+    document.getElementById('rewardDesc').textContent = `All days marked for week ${w+1}. Incredible discipline — keep the momentum!`;
+    reward.classList.add('show');
+  } else {
+    reward.classList.remove('show');
+  }
+
+  updateProgress();
+  renderStars();
+}
+
+// ═══ TOGGLE DAY ═══════════════════════════════════════════════════
+function toggleDay(ds, w) {
+  const wasDone = !!S.done[ds];
+  if (wasDone) { delete S.done[ds]; }
+  else {
+    S.done[ds] = true;
+    // check if this just completed the week
+    if (weekComplete(w)) launchConfetti();
+  }
+  buildTabs();
+  renderWeek(w);
+}
+
+// ═══ PROGRESS ═════════════════════════════════════════════════════
+function updateProgress() {
+  if (!S.start || !S.end) return;
+  const today = new Date(); today.setHours(0,0,0,0);
+  let total = 0, done = 0;
+  const cur = new Date(S.start);
+  while (cur <= S.end && cur <= today) {
+    total++;
+    if (S.done[toStr(cur)]) done++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  document.getElementById('progressLabel').textContent = `${done} of ${total} days completed`;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ═══ STARS ════════════════════════════════════════════════════════
+function renderStars() {
+  const tw = totalWeeks();
+  let html = '';
+  for (let w = 0; w < tw; w++) {
+    html += weekComplete(w)
+      ? `<span class="star-filled" title="Week ${w+1} complete">⭐</span>`
+      : `<span class="star-empty" title="Week ${w+1} pending">⭐</span>`;
+  }
+  document.getElementById('starsDisplay').innerHTML = html;
+}
+
+// ═══ GOOGLE CALENDAR EXPORT ═══════════════════════════════════════
+function exportToGCal() {
+  if (!S.start || !S.end) { alert('Please start your tracker first.'); return; }
+  const startFmt = toStr(S.start).replace(/-/g,'');
+  const endNext = new Date(S.end); endNext.setDate(endNext.getDate()+1);
+  const endFmt = toStr(endNext).replace(/-/g,'');
+  const mealLines = S.meals.map(m => `• ${m.time}: ${m.name} (~${m.cals} kcal)`).join('\n');
+  const desc = `NutriPlan — ${S.planName}\n\nYour daily meal guide:\n${mealLines}\n\nCalorie target: ${S.goalCals} kcal/day\n\nLog your progress in NutriPlan!`;
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `🥗 ${S.planName} — NutriPlan`,
+    dates: `${startFmt}/${endFmt}`,
+    details: desc,
+  });
+  window.open(`https://calendar.google.com/calendar/render?${params}`, '_blank');
+}
+
+// ═══ CONFETTI ═════════════════════════════════════════════════════
+function launchConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colours = ['#639922','#1D9E75','#d4a017','#BA7517','#C0DD97','#5DCAA5'];
+  const pieces = Array.from({length:90}, () => ({
+    x: Math.random()*canvas.width, y: -20 - Math.random()*150,
+    r: Math.random()*7+3, dx: (Math.random()-0.5)*2,
+    dy: Math.random()*3+1.5, rot: Math.random()*360,
+    drot: (Math.random()-0.5)*8,
+    color: colours[Math.floor(Math.random()*colours.length)]
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p => {
+      p.x += p.dx; p.y += p.dy; p.rot += p.drot;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*2);
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 180) requestAnimationFrame(draw);
+    else { ctx.clearRect(0,0,canvas.width,canvas.height); canvas.style.display='none'; }
+  }
+  draw();
+}
+
+// ═══ NUTRITION HELPERS ════════════════════════════════════════════
+function calcTDEE(d) {
+  const h=parseFloat(d.height), w=parseFloat(d.weight), age=parseFloat(d.age);
+  const bmr = d.gender==='female' ? 10*w+6.25*h-5*age-161 : 10*w+6.25*h-5*age+5;
+  return Math.round(bmr * ({sedentary:1.2,light:1.375,moderate:1.55,active:1.725,athlete:1.9}[d.activity]||1.4));
+}
+function adjustCals(tdee, goal) {
+  return tdee + ({lose_weight:-500,maintain:0,gain_muscle:300,improve_health:-150}[goal]||0);
+}
+function bmiCat(bmi) {
+  if (bmi<18.5) return 'Underweight';
+  if (bmi<25)   return 'Healthy';
+  if (bmi<30)   return 'Overweight';
+  return 'Obese';
+}
+
+// ═══ DEFAULT DATA ═════════════════════════════════════════════════
+function defaultPlans(inp, bmi) {
+  const base = [
+    { type:'Mediterranean', tagBg:'#EAF3DE', tagColor:'#3B6D11', name:'Mediterranean Diet',
+      description:'Rich in whole grains, olive oil, vegetables, legumes, and fish. Associated with heart health and longevity.',
+      macros:['Carbs 50%','Fat 30%','Protein 20%','High fibre'] },
+    { type:'Low Carb', tagBg:'#FAEEDA', tagColor:'#BA7517', name:'Low-Carb / Keto',
+      description:'Reduces carbohydrate intake to promote fat burning. Effective for weight loss and blood sugar control.',
+      macros:['Carbs 10%','Fat 65%','Protein 25%','Ketogenic'] },
+    { type:'High Protein', tagBg:'#E1F5EE', tagColor:'#0F6E56', name:'High-Protein Plan',
+      description:'Preserves muscle mass during a deficit, ideal for muscle gain and body recomposition.',
+      macros:['Carbs 35%','Fat 25%','Protein 40%','Muscle-friendly'] },
+  ];
+  if (inp.goal==='lose_weight') return [base[1],base[0],base[2]];
+  if (inp.goal==='gain_muscle') return [base[2],base[0],base[1]];
+  return base;
+}
+function defaultMeals(cals, inp) {
+  const veg = (inp.conditions||'').toLowerCase();
+  const isV = veg.includes('vegetarian') || veg.includes('vegan');
+  return [
+    { time:'Breakfast', name:isV?'Oat porridge with berries & chia seeds':'Scrambled eggs, wholegrain toast & avocado', detail:'+ black coffee or green tea', cals:Math.round(cals*0.22) },
+    { time:'Snack', name:'Greek yoghurt with walnuts', detail:'High protein, healthy fats', cals:Math.round(cals*0.10) },
+    { time:'Lunch', name:isV?'Lentil & vegetable Buddha bowl':'Grilled chicken salad with quinoa & lemon dressing', detail:'Complex carbs + lean protein', cals:Math.round(cals*0.32) },
+    { time:'Snack', name:'Apple slices with almond butter', detail:'Fibre + healthy fat', cals:Math.round(cals*0.08) },
+    { time:'Dinner', name:isV?'Chickpea curry with brown rice':'Baked salmon, steamed broccoli & sweet potato', detail:'Omega-3s, complex carbs', cals:Math.round(cals*0.28) },
+  ];
+}
+function defaultGoogle(inp) {
+  const qm = {lose_weight:'best diet plans for weight loss',gain_muscle:'high protein diet plan for muscle gain',maintain:'balanced diet plan for weight maintenance',improve_health:'healthy eating plan general wellness'};
+  const q = encodeURIComponent(qm[inp.goal]||'healthy diet plan');
+  return [
+    { source:'NHS UK', url:'https://www.nhs.uk/live-well/eat-well/', title:'NHS — Eat Well Guide', snippet:'Evidence-based dietary advice from the UK National Health Service.' },
+    { source:'WHO', url:'https://www.who.int/news-room/fact-sheets/detail/healthy-diet', title:'WHO Healthy Diet Guidelines', snippet:'Global dietary recommendations from the World Health Organization.' },
+    { source:'Healthline', url:'https://www.healthline.com/nutrition/best-diet-plans', title:'Best Diet Plans Ranked by Experts', snippet:'Science-backed reviews of the most popular diet approaches.' },
+    { source:'Google Search', url:`https://www.google.com/search?q=${q}`, title:`Search: "${decodeURIComponent(q)}"`, snippet:'Live search results tailored to your goal.' },
+  ];
+}
+</script>
+</body>
+</html>
